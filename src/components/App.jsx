@@ -5,6 +5,7 @@ import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
 import css from './App.module.css';
+import { fetchImagesApi } from './Api/Api';
 
 export const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +14,7 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [largeImageURL, setLargeImageURL] = useState('');
+  const [showBtn, setShowBtn] = useState(false);
 
   useEffect(() => {
     if (!searchQuery) return;
@@ -20,13 +22,9 @@ export const App = () => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-
-        const response = await fetch(
-          `https://pixabay.com/api/?q=${searchQuery}&page=${page}&key=40756450-2b62d5efbb9c5d98f0ec642a2&image_type=photo&orientation=horizontal&per_page=12`
-        );
-        const data = await response.json();
-
+        const data = await fetchImagesApi(searchQuery, page);
         setImages(prevImages => [...prevImages, ...data.hits]);
+        setShowBtn(page < Math.ceil(data.totalHits / 12));
       } catch (error) {
         console.error('Error fetching images:', error);
       } finally {
@@ -64,7 +62,7 @@ export const App = () => {
         <ImageGallery images={images} onImageClick={handleImageClick} />
       )}
       {isLoading && <Loader />}
-      {images.length > 0 && !isLoading && (
+      {images.length > 0 && !isLoading && showBtn && (
         <Button onClick={handleLoadMoreClick} />
       )}
       {showModal && (
